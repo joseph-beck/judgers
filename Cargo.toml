@@ -1,5 +1,5 @@
 [workspace]
-members = ["judge-cli", "judge-core"]
+members = ["judgers-cli", "judgers-core"]
 resolver = "1"
 
 [workspace.dependencies]
