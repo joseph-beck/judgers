@@ -1,0 +1,48 @@
+# Checks the codebase for a series of problems
+# - formatting issues
+# - common mistakes / lint
+# - unit testing
+name: Checks
+
+# Always run on main and any PRs.
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Runs rustfmt to check for any formatting issues.
+  formatting:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Rustfmt
+        run: rustfmt **/*.rs --check --verbose
+
+  # Runs clippy to check for any common mistakes / lint.
+  clippy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clippy
+        run: cargo clippy
+
+  # Runs all unit tests within the codebase.
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test
+        run: cargo test --verbose
