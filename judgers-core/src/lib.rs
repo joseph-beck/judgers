@@ -1,3 +1,9 @@
+pub mod allocate;
+pub mod config;
+pub mod judge;
+pub mod project;
+pub mod spreadsheet;
+
 pub fn add(left: u64, right: u64) -> u64 {
   left + right
 }
