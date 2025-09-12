@@ -22,8 +22,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Rustfmt
-        run: rustfmt **/*.rs --check --verbose
+      - name: Formatting
+        run: cargo fmt --check --verbose
 
   # Runs clippy to check for any common mistakes / lint.
   clippy:
