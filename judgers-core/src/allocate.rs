@@ -44,6 +44,7 @@ impl std::fmt::Debug for Allocations {
         writeln!(f, "  Project: {}", project.name)?;
       }
     }
+
     Ok(())
   }
 }
@@ -55,8 +56,11 @@ impl Allocations {
 }
 
 pub struct RandomAllocator {
+  // General configuration for allocators.
   config: Config,
+  // All judges that are used for allocations.
   judges: Vec<Judge>,
+  // All projects that will be assigned to judges.
   projects: Vec<Project>,
 }
 
@@ -81,8 +85,8 @@ impl Allocator for RandomAllocator {
     for project in &self.projects {
       let mut judges_allocated = 0;
       while judges_allocated < self.config.judge_amount {
-        let idx = rand::rng().random_range(0..allocations.len());
-        let allocation = allocations.get_mut(idx).unwrap();
+        let index = rand::rng().random_range(0..allocations.len());
+        let allocation = allocations.get_mut(index).unwrap();
 
         if allocation.projects.contains(&project) {
           continue;
@@ -101,41 +105,88 @@ impl Allocator for RandomAllocator {
 mod tests {
   use super::*;
   use crate::config::Config;
+  use std::collections::HashMap;
 
   #[test]
-  fn test_random_allocator() {
+  fn test_random_allocator_with_two() {
     let config = Config {
       judge_amount: 2,
       ..Default::default()
     };
 
     let judges = vec![
-      Judge {
-        id: "1".to_string(),
-        name: "Judge 1".to_string(),
-      },
-      Judge {
-        id: "2".to_string(),
-        name: "Judge 2".to_string(),
-      },
+      Judge::new("1".to_string(), "Judge 1".to_string()),
+      Judge::new("2".to_string(), "Judge 2".to_string()),
     ];
 
     let projects = vec![
-      Project {
-        id: "1".to_string(),
-        name: "Project 1".to_string(),
-      },
-      Project {
-        id: "2".to_string(),
-        name: "Project 2".to_string(),
-      },
+      Project::new("1".to_string(), "Project 1".to_string()),
+      Project::new("2".to_string(), "Project 2".to_string()),
+      Project::new("3".to_string(), "Project 3".to_string()),
+      Project::new("4".to_string(), "Project 4".to_string()),
     ];
 
     let allocator = RandomAllocator::new(config, judges.clone(), projects.clone());
     let allocations = allocator.allocate().unwrap();
 
+    let mut project_counts: HashMap<String, usize> = HashMap::new();
+
     for allocation in &allocations.allocations {
-      assert_eq!(allocation.projects.len(), 2);
+      for project in &allocation.projects {
+        *project_counts.entry(project.id.clone()).or_insert(0) += 1;
+      }
+    }
+
+    for project in &projects {
+      assert_eq!(
+        project_counts.get(&project.id),
+        Some(&2),
+        "Project {} was not allocated exactly twice",
+        project.name
+      );
+    }
+  }
+
+  #[test]
+  fn test_random_allocator_with_three() {
+    let config = Config {
+      judge_amount: 3,
+      ..Default::default()
+    };
+
+    let judges = vec![
+      Judge::new("1".to_string(), "Judge 1".to_string()),
+      Judge::new("2".to_string(), "Judge 2".to_string()),
+      Judge::new("3".to_string(), "Judge 3".to_string()),
+    ];
+
+    let projects = vec![
+      Project::new("1".to_string(), "Project 1".to_string()),
+      Project::new("2".to_string(), "Project 2".to_string()),
+      Project::new("3".to_string(), "Project 3".to_string()),
+      Project::new("4".to_string(), "Project 4".to_string()),
+      Project::new("5".to_string(), "Project 5".to_string()),
+      Project::new("6".to_string(), "Project 6".to_string()),
+    ];
+
+    let allocator = RandomAllocator::new(config, judges.clone(), projects.clone());
+    let allocations = allocator.allocate().unwrap();
+
+    let mut project_counts: HashMap<String, usize> = HashMap::new();
+
+    for allocation in &allocations.allocations {
+      for project in &allocation.projects {
+        *project_counts.entry(project.id.clone()).or_insert(0) += 1;
+      }
+    }
+
+    for project in &projects {
+      assert_eq!(
+        project_counts.get(&project.id),
+        Some(&3),
+        "Project {} was not allocated exactly twice",
+        project.name
+      );
     }
   }
 }
