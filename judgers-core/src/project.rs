@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Project {
   /// Id of the project, this value must be unique.
   pub id: String,

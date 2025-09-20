@@ -2,7 +2,10 @@ use rand::prelude::*;
 
 use crate::{config::Config, error, judge::Judge, project::Project};
 
+/// Allocator trait, must be implemented by all allocators.
 pub trait Allocator {
+  /// Allocate, returns a mapping of judges to projects.
+  /// May return an error if allocation is not possible.
   fn allocate(&self) -> Result<Allocations, error::Error>;
 }
 
@@ -105,6 +108,44 @@ impl Allocator for RandomFairAllocator {
         allocation.projects.push(project.clone());
         judges_allocated += 1;
       }
+    }
+
+    Ok(Allocations::new(allocations))
+  }
+}
+
+/// Presentation style allocator.
+/// Each judge will see every project, typically at the same time.
+pub struct PresentationAllocator {
+  /// Config for the allocator.
+  /// Judge amount will be ignored for this allocator.
+  _config: Config,
+  /// All judges that are used for allocations.
+  judges: Vec<Judge>,
+  /// All projects that will be assigned to judges.
+  projects: Vec<Project>,
+}
+
+impl PresentationAllocator {
+  pub fn new(_config: Config, judges: Vec<Judge>, projects: Vec<Project>) -> Self {
+    PresentationAllocator {
+      _config,
+      judges,
+      projects,
+    }
+  }
+}
+
+impl Allocator for PresentationAllocator {
+  fn allocate(&self) -> Result<Allocations, error::Error> {
+    let mut allocations: Vec<Allocation> = Vec::new();
+
+    for judge in &self.judges {
+      allocations.push(Allocation::new(judge.clone(), Vec::new()));
+    }
+
+    for allocation in &mut allocations {
+      allocation.projects = self.projects.clone();
     }
 
     Ok(Allocations::new(allocations))
@@ -222,5 +263,49 @@ mod tests {
     let allocator = RandomFairAllocator::new(config, judges.clone(), projects.clone());
     let allocations = allocator.allocate();
     assert!(allocations.is_err());
+  }
+
+  #[test]
+  fn test_presentation_allocator_no_projects() {
+    let config = Config::default();
+
+    let judges = vec![
+      Judge::new("1".to_string(), "Judge 1".to_string()),
+      Judge::new("2".to_string(), "Judge 2".to_string()),
+    ];
+
+    let projects = vec![];
+
+    let allocator = PresentationAllocator::new(config, judges, projects);
+
+    let allocations = allocator.allocate().unwrap();
+    for allocation in &allocations.allocations {
+      assert_eq!(allocation.projects.len(), 0);
+      assert_eq!(allocation.projects, allocator.projects);
+    }
+  }
+
+  #[test]
+  fn test_presentation_allocator() {
+    let config = Config::default();
+
+    let judges = vec![
+      Judge::new("1".to_string(), "Judge 1".to_string()),
+      Judge::new("2".to_string(), "Judge 2".to_string()),
+    ];
+
+    let projects = vec![
+      Project::new("1".to_string(), "Project 1".to_string()),
+      Project::new("2".to_string(), "Project 2".to_string()),
+      Project::new("3".to_string(), "Project 3".to_string()),
+    ];
+
+    let allocator = PresentationAllocator::new(config, judges, projects);
+
+    let allocations = allocator.allocate().unwrap();
+    for allocation in &allocations.allocations {
+      assert_eq!(allocation.projects.len(), allocator.projects.len());
+      assert_eq!(allocation.projects, allocator.projects);
+    }
   }
 }
