@@ -1,8 +1,8 @@
 #[derive(Clone)]
 pub struct Project {
-  // Id of the project, this value must be unique.
+  /// Id of the project, this value must be unique.
   pub id: String,
-  // Name of the project.
+  /// Name of the project.
   pub name: String,
 }
 

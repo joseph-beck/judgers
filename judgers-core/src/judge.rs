@@ -1,8 +1,8 @@
 #[derive(Clone)]
 pub struct Judge {
-  // Id of the judge, this value must be unique.
+  /// Id of the judge, this value must be unique.
   pub id: String,
-  // Name of the judge.
+  /// Name of the judge.
   pub name: String,
 }
 

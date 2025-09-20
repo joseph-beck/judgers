@@ -1,17 +1,16 @@
 use rand::prelude::*;
-use std::fmt::Error;
 
-use crate::{config::Config, judge::Judge, project::Project};
+use crate::{config::Config, error, judge::Judge, project::Project};
 
 pub trait Allocator {
-  fn allocate(&self) -> Result<Allocations, Error>;
+  fn allocate(&self) -> Result<Allocations, error::Error>;
 }
 
-// Allocation for a single judge and their assigned projects.
+/// Allocation for a single judge and their assigned projects.
 pub struct Allocation {
-  // Judge that has projects allocated to it.
+  /// Judge that has projects allocated to it.
   pub judge: Judge,
-  // Projects allocated to the judge.
+  /// Projects allocated to the judge.
   pub projects: Vec<Project>,
 }
 
@@ -21,10 +20,10 @@ impl Allocation {
   }
 }
 
-// Allocations for all judges and projects.
+/// Allocations for all judges and projects.
 pub struct Allocations {
-  // Vec of all allocations.
-  // Defaults to empty vec.
+  /// Vec of all allocations.
+  /// Defaults to empty vec.
   pub allocations: Vec<Allocation>,
 }
 
@@ -55,18 +54,21 @@ impl Allocations {
   }
 }
 
-pub struct RandomAllocator {
-  // General configuration for allocators.
+/// A random, science fair style, allocator.
+/// It is not guaranteed that each judge will view every project.
+/// Each project will be judged by a unique judge.
+pub struct RandomFairAllocator {
+  /// General configuration for allocators.
   config: Config,
-  // All judges that are used for allocations.
+  /// All judges that are used for allocations.
   judges: Vec<Judge>,
-  // All projects that will be assigned to judges.
+  /// All projects that will be assigned to judges.
   projects: Vec<Project>,
 }
 
-impl RandomAllocator {
+impl RandomFairAllocator {
   pub fn new(config: Config, judges: Vec<Judge>, projects: Vec<Project>) -> Self {
-    RandomAllocator {
+    RandomFairAllocator {
       config,
       judges,
       projects,
@@ -74,12 +76,20 @@ impl RandomAllocator {
   }
 }
 
-impl Allocator for RandomAllocator {
-  fn allocate(&self) -> Result<Allocations, Error> {
+impl Allocator for RandomFairAllocator {
+  fn allocate(&self) -> Result<Allocations, error::Error> {
     let mut allocations: Vec<Allocation> = Vec::new();
 
     for judge in &self.judges {
       allocations.push(Allocation::new(judge.clone(), Vec::new()));
+    }
+
+    if self.config.judge_amount > self.judges.len() as u32 {
+      return Err(error::Error::NotEnoughJudges {
+        judges: self.judges.len() as u32,
+        projects: self.projects.len() as u32,
+        judge_amount: self.config.judge_amount,
+      });
     }
 
     for project in &self.projects {
@@ -126,7 +136,7 @@ mod tests {
       Project::new("4".to_string(), "Project 4".to_string()),
     ];
 
-    let allocator = RandomAllocator::new(config, judges.clone(), projects.clone());
+    let allocator = RandomFairAllocator::new(config, judges.clone(), projects.clone());
     let allocations = allocator.allocate().unwrap();
 
     let mut project_counts: HashMap<String, usize> = HashMap::new();
@@ -169,7 +179,7 @@ mod tests {
       Project::new("6".to_string(), "Project 6".to_string()),
     ];
 
-    let allocator = RandomAllocator::new(config, judges.clone(), projects.clone());
+    let allocator = RandomFairAllocator::new(config, judges.clone(), projects.clone());
     let allocations = allocator.allocate().unwrap();
 
     let mut project_counts: HashMap<String, usize> = HashMap::new();
@@ -188,5 +198,29 @@ mod tests {
         project.name
       );
     }
+  }
+
+  #[test]
+  fn test_random_allocator_error_not_enough_judges() {
+    let config = Config {
+      judge_amount: 3,
+      ..Default::default()
+    };
+
+    let judges = vec![
+      Judge::new("1".to_string(), "Judge 1".to_string()),
+      Judge::new("2".to_string(), "Judge 2".to_string()),
+    ];
+
+    let projects = vec![
+      Project::new("1".to_string(), "Project 1".to_string()),
+      Project::new("2".to_string(), "Project 2".to_string()),
+      Project::new("3".to_string(), "Project 3".to_string()),
+      Project::new("4".to_string(), "Project 4".to_string()),
+    ];
+
+    let allocator = RandomFairAllocator::new(config, judges.clone(), projects.clone());
+    let allocations = allocator.allocate();
+    assert!(allocations.is_err());
   }
 }
