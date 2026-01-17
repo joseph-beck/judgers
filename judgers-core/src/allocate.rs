@@ -88,7 +88,7 @@ impl Allocator for RandomFairAllocator {
     }
 
     if self.config.judge_amount > self.judges.len() as u32 {
-      return Err(error::Error::NotEnoughJudges {
+      return Err(error::Error::ErrNotEnoughJudges {
         judges: self.judges.len() as u32,
         projects: self.projects.len() as u32,
         judge_amount: self.config.judge_amount,
@@ -108,6 +108,56 @@ impl Allocator for RandomFairAllocator {
         allocation.projects.push(project.clone());
         judges_allocated += 1;
       }
+    }
+
+    Ok(Allocations::new(allocations))
+  }
+}
+
+/// Similar to the allocation of the random fair allocator,
+/// but judges are assigned in sequence rather than randomly.
+/// This means judges will judge in the order, x then y then z.
+pub struct SequenceFairAllocator {
+  /// General configuration for allocators.
+  config: Config,
+  /// All judges that are used for allocations.
+  judges: Vec<Judge>,
+  /// All projects that will be assigned to judges.
+  projects: Vec<Project>,
+}
+
+impl SequenceFairAllocator {
+  pub fn new(config: Config, judges: Vec<Judge>, projects: Vec<Project>) -> Self {
+    SequenceFairAllocator {
+      config,
+      judges,
+      projects,
+    }
+  }
+}
+
+impl Allocator for SequenceFairAllocator {
+  fn allocate(&self) -> Result<Allocations, error::Error> {
+    if self.judges.is_empty() {
+      return Err(error::Error::ErrNoJudges);
+    }
+
+    if self.projects.is_empty() {
+      return Err(error::Error::ErrNoProjects);
+    }
+
+    let mut allocations: Vec<Allocation> = Vec::new();
+
+    for judge in &self.judges {
+      allocations.push(Allocation::new(judge.clone(), Vec::new()));
+    }
+
+    if self.config.judge_amount > self.judges.len() as u32 {
+      return Err(error::Error::ErrNotEnoughJudges {
+        judges: self.judges.len() as u32,
+        projects: self.projects.len() as u32,
+        judge_amount: self.config.judge_amount,
+      });
     }
 
     Ok(Allocations::new(allocations))
@@ -263,6 +313,44 @@ mod tests {
     let allocator = RandomFairAllocator::new(config, judges.clone(), projects.clone());
     let allocations = allocator.allocate();
     assert!(allocations.is_err());
+  }
+
+  #[test]
+  fn test_sequence_allocator_no_projects() {
+    let config = Config::default();
+
+    let judges = vec![
+      Judge::new("1".to_string(), "Judge 1".to_string()),
+      Judge::new("2".to_string(), "Judge 2".to_string()),
+      Judge::new("3".to_string(), "Judge 3".to_string()),
+    ];
+
+    let projects = vec![];
+
+    let allocator = SequenceFairAllocator::new(config, judges, projects);
+
+    let result = allocator.allocate();
+
+    assert!(result.is_err());
+  }
+
+  #[test]
+  fn test_sequence_allocator_no_judges() {
+    let config = Config::default();
+
+    let judges = vec![];
+
+    let projects = vec![
+      Project::new("1".to_string(), "Project 1".to_string()),
+      Project::new("2".to_string(), "Project 2".to_string()),
+      Project::new("3".to_string(), "Project 3".to_string()),
+    ];
+
+    let allocator = SequenceFairAllocator::new(config, judges, projects);
+
+    let result = allocator.allocate();
+
+    assert!(result.is_err());
   }
 
   #[test]
