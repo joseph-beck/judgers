@@ -9,6 +9,22 @@ pub trait Allocator {
   fn allocate(&self) -> Result<Allocations, error::Error>;
 }
 
+impl dyn Allocator {
+  pub fn from_str(
+    allocator: &str,
+    config: Config,
+    judges: Vec<Judge>,
+    projects: Vec<Project>,
+  ) -> Box<dyn Allocator> {
+    match allocator {
+      "random" => Box::new(RandomFairAllocator::new(config, judges, projects)),
+      "sequence" => Box::new(SequenceFairAllocator::new(config, judges, projects)),
+      "presentation" => Box::new(PresentationAllocator::new(config, judges, projects)),
+      _ => Box::new(RandomFairAllocator::new(config, judges, projects)),
+    }
+  }
+}
+
 /// Allocation for a single judge and their assigned projects.
 pub struct Allocation {
   /// Judge that has projects allocated to it.
