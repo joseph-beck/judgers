@@ -11,4 +11,16 @@ pub enum Error {
   ErrNoJudges,
   /// When there are no projects.
   ErrNoProjects,
+  /// When the judge ID is invalid.
+  ErrInvalidJudgeId(String),
+  /// When there are duplicate judge IDs.
+  ErrDuplicateJudgeIds,
+  /// When the judge name is invalid.
+  ErrInvalidJudgeName(String),
+  /// When the project ID is invalid.
+  ErrInvalidProjectId(String),
+  /// When there are duplicate project IDs.
+  ErrDuplicateProjectIds,
+  /// When the project name is invalid.
+  ErrInvalidProjectName(String),
 }
