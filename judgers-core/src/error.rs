@@ -3,9 +3,9 @@
 pub enum Error {
   /// When there are not enough judges as per the configuration.
   ErrNotEnoughJudges {
-    judges: u32,
-    projects: u32,
-    judge_amount: u32,
+    judge_count: usize,
+    project_count: usize,
+    judge_amount_min: u32,
   },
   /// When there are no judges.
   ErrNoJudges,

@@ -81,23 +81,31 @@ impl RandomFairAllocator {
 
 impl Allocator for RandomFairAllocator {
   fn allocate(&self) -> Result<Allocations, error::Error> {
+    if self.judges.is_empty() {
+      return Err(error::Error::ErrNoJudges);
+    }
+
+    if self.projects.is_empty() {
+      return Err(error::Error::ErrNoProjects);
+    }
+
     let mut allocations: Vec<Allocation> = Vec::new();
 
     for judge in &self.judges {
       allocations.push(Allocation::new(judge.clone(), Vec::new()));
     }
 
-    if self.config.judge_amount > self.judges.len() as u32 {
+    if self.config.judge_amount_min > self.judges.len() as u32 {
       return Err(error::Error::ErrNotEnoughJudges {
-        judges: self.judges.len() as u32,
-        projects: self.projects.len() as u32,
-        judge_amount: self.config.judge_amount,
+        judge_count: self.judges.len(),
+        project_count: self.projects.len(),
+        judge_amount_min: self.config.judge_amount_min,
       });
     }
 
     for project in &self.projects {
       let mut judges_allocated = 0;
-      while judges_allocated < self.config.judge_amount {
+      while judges_allocated < self.config.judge_amount_min {
         let index = rand::rng().random_range(0..allocations.len());
         let allocation = allocations.get_mut(index).unwrap();
 
@@ -152,12 +160,33 @@ impl Allocator for SequenceFairAllocator {
       allocations.push(Allocation::new(judge.clone(), Vec::new()));
     }
 
-    if self.config.judge_amount > self.judges.len() as u32 {
+    if self.config.judge_amount_min > self.judges.len() as u32 {
       return Err(error::Error::ErrNotEnoughJudges {
-        judges: self.judges.len() as u32,
-        projects: self.projects.len() as u32,
-        judge_amount: self.config.judge_amount,
+        judge_count: self.judges.len(),
+        project_count: self.projects.len(),
+        judge_amount_min: self.config.judge_amount_min,
       });
+    }
+
+    let num_judges = self.judges.len();
+    let num_projects = self.projects.len();
+
+    let judges_per_project = self.config.judge_amount_min as usize;
+    let projects_per_judge =
+      ((num_projects * judges_per_project) as f64 / num_judges as f64).ceil() as usize;
+
+    for (i, allocation) in allocations.iter_mut().enumerate() {
+      // start offset is required to prevent judges from judging the same project at the same time.
+      // for example j1 will judge p1 whilst j2 judges p2, etc.
+      let start_offset = (i * num_projects) / num_judges;
+
+      for j in 0..projects_per_judge {
+        let project_idx = (start_offset + j) % num_projects;
+
+        if j < num_projects {
+          allocation.projects.push(self.projects[project_idx].clone());
+        }
+      }
     }
 
     Ok(Allocations::new(allocations))
@@ -211,7 +240,7 @@ mod tests {
   #[test]
   fn test_random_allocator_with_two() {
     let config = Config {
-      judge_amount: 2,
+      judge_amount_min: 2,
       ..Default::default()
     };
 
@@ -251,7 +280,7 @@ mod tests {
   #[test]
   fn test_random_allocator_with_three() {
     let config = Config {
-      judge_amount: 3,
+      judge_amount_min: 3,
       ..Default::default()
     };
 
@@ -294,7 +323,7 @@ mod tests {
   #[test]
   fn test_random_allocator_error_not_enough_judges() {
     let config = Config {
-      judge_amount: 3,
+      judge_amount_min: 3,
       ..Default::default()
     };
 
@@ -316,8 +345,161 @@ mod tests {
   }
 
   #[test]
+  fn test_random_allocator_no_projects() {
+    let config = Config {
+      judge_amount_min: 3,
+      ..Default::default()
+    };
+
+    let judges = vec![
+      Judge::new("1".to_string(), "Judge 1".to_string()),
+      Judge::new("2".to_string(), "Judge 2".to_string()),
+      Judge::new("3".to_string(), "Judge 3".to_string()),
+    ];
+
+    let projects = vec![];
+
+    let allocator = RandomFairAllocator::new(config, judges, projects);
+
+    let result = allocator.allocate();
+
+    assert!(result.is_err());
+  }
+
+  #[test]
+  fn test_random_allocator_no_judges() {
+    let config = Config {
+      judge_amount_min: 3,
+      ..Default::default()
+    };
+
+    let judges = vec![];
+
+    let projects = vec![
+      Project::new("1".to_string(), "Project 1".to_string()),
+      Project::new("2".to_string(), "Project 2".to_string()),
+      Project::new("3".to_string(), "Project 3".to_string()),
+    ];
+
+    let allocator = RandomFairAllocator::new(config, judges, projects);
+
+    let result = allocator.allocate();
+
+    assert!(result.is_err());
+  }
+
+  #[test]
+  fn test_sequence_allocator_with_two() {
+    let config = Config {
+      judge_amount_min: 2,
+      ..Default::default()
+    };
+
+    let judges = vec![
+      Judge::new("1".to_string(), "Judge 1".to_string()),
+      Judge::new("2".to_string(), "Judge 2".to_string()),
+    ];
+
+    let projects = vec![
+      Project::new("1".to_string(), "Project 1".to_string()),
+      Project::new("2".to_string(), "Project 2".to_string()),
+      Project::new("3".to_string(), "Project 3".to_string()),
+      Project::new("4".to_string(), "Project 4".to_string()),
+    ];
+
+    let allocator = SequenceFairAllocator::new(config, judges.clone(), projects.clone());
+    let allocations = allocator.allocate().unwrap();
+
+    let mut project_counts: HashMap<String, usize> = HashMap::new();
+
+    for allocation in &allocations.allocations {
+      for project in &allocation.projects {
+        *project_counts.entry(project.id.clone()).or_insert(0) += 1;
+      }
+    }
+
+    for project in &projects {
+      assert_eq!(
+        project_counts.get(&project.id),
+        Some(&2),
+        "Project {} was not allocated exactly twice",
+        project.name
+      );
+    }
+  }
+
+  #[test]
+  fn test_sequence_allocator_three() {
+    let config = Config {
+      judge_amount_min: 3,
+      ..Default::default()
+    };
+
+    let judges = vec![
+      Judge::new("1".to_string(), "Judge 1".to_string()),
+      Judge::new("2".to_string(), "Judge 2".to_string()),
+      Judge::new("3".to_string(), "Judge 3".to_string()),
+    ];
+
+    let projects = vec![
+      Project::new("1".to_string(), "Project 1".to_string()),
+      Project::new("2".to_string(), "Project 2".to_string()),
+      Project::new("3".to_string(), "Project 3".to_string()),
+      Project::new("4".to_string(), "Project 4".to_string()),
+    ];
+
+    let allocator = SequenceFairAllocator::new(config, judges.clone(), projects.clone());
+    let allocations = allocator.allocate().unwrap();
+
+    let mut project_counts: HashMap<String, usize> = HashMap::new();
+
+    for allocation in &allocations.allocations {
+      for project in &allocation.projects {
+        *project_counts.entry(project.id.clone()).or_insert(0) += 1;
+      }
+    }
+
+    for project in &projects {
+      assert!(
+        project_counts
+          .get(&project.id)
+          .is_some_and(|&count| count >= 2),
+        "Project {} was not allocated exactly twice",
+        project.name
+      );
+    }
+  }
+
+  #[test]
+  fn test_sequence_allocator_error_not_enough_judges() {
+    let config = Config {
+      judge_amount_min: 3,
+      ..Default::default()
+    };
+
+    let judges = vec![
+      Judge::new("1".to_string(), "Judge 1".to_string()),
+      Judge::new("2".to_string(), "Judge 2".to_string()),
+    ];
+
+    let projects = vec![
+      Project::new("1".to_string(), "Project 1".to_string()),
+      Project::new("2".to_string(), "Project 2".to_string()),
+      Project::new("3".to_string(), "Project 3".to_string()),
+      Project::new("4".to_string(), "Project 4".to_string()),
+    ];
+
+    let allocator = SequenceFairAllocator::new(config, judges.clone(), projects.clone());
+    let allocations = allocator.allocate();
+    assert!(allocations.is_err());
+  }
+
+  #[test]
   fn test_sequence_allocator_no_projects() {
-    let config = Config::default();
+    let config = Config {
+      judge_amount_min: 3,
+      ..Default::default()
+    };
 
     let judges = vec![
       Judge::new("1".to_string(), "Judge 1".to_string()),
@@ -336,7 +518,10 @@ mod tests {
 
   #[test]
   fn test_sequence_allocator_no_judges() {
-    let config = Config::default();
+    let config = Config {
+      judge_amount_min: 3,
+      ..Default::default()
+    };
 
     let judges = vec![];
 

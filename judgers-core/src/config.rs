@@ -9,9 +9,9 @@ pub enum Mode {
 /// Requires that for a given mode some options be populated.
 /// For Xlsx mode, spreadsheet_path must be populated.
 pub struct Config {
-  /// Amount of times a project needs to be judged.
+  /// Minimum amount of times a project needs to be judged.
   /// Defaults to 3.
-  pub judge_amount: u32,
+  pub judge_amount_min: u32,
   /// Should we enforce that all judges judge the same amount of projects?
   /// Defaults to false.
   pub judge_equal_amount: bool,
@@ -43,7 +43,7 @@ pub struct Config {
 impl Default for Config {
   fn default() -> Self {
     Config {
-      judge_amount: 3,
+      judge_amount_min: 3,
       judge_equal_amount: false,
       judge_time: 5,
       mode: Mode::Json,
