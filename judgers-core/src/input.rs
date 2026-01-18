@@ -48,3 +48,54 @@ impl Validate for Input {
     Ok(())
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_input_validation_valid() {
+    let valid_judge = Judge::new("j1".to_string(), "Judge One".to_string());
+    let valid_project = Project::new("p1".to_string(), "Project One".to_string());
+
+    let input = Input::new(vec![valid_judge.clone()], vec![valid_project.clone()]);
+
+    assert!(input.validate().is_ok());
+  }
+
+  #[test]
+  fn test_input_validation_no_judges() {
+    let valid_project = Project::new("p1".to_string(), "Project One".to_string());
+
+    let input = Input::new(vec![], vec![valid_project.clone()]);
+
+    assert!(input.validate().is_err());
+  }
+
+  #[test]
+  fn test_input_validation_no_projects() {
+    let valid_judge = Judge::new("j1".to_string(), "Judge One".to_string());
+
+    let input = Input::new(vec![valid_judge.clone()], vec![]);
+
+    assert!(input.validate().is_err());
+  }
+
+  #[test]
+  fn test_input_validation_duplicate_judge_ids() {
+    let valid_judge = Judge::new("j1".to_string(), "Judge One".to_string());
+
+    let input = Input::new(vec![valid_judge.clone(), valid_judge.clone()], vec![]);
+
+    assert!(input.validate().is_err());
+  }
+
+  #[test]
+  fn test_input_validation_duplicate_project_ids() {
+    let valid_project = Project::new("p1".to_string(), "Project One".to_string());
+
+    let input = Input::new(vec![], vec![valid_project.clone(), valid_project.clone()]);
+
+    assert!(input.validate().is_err());
+  }
+}
