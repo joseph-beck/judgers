@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{Validate, error::Error};
+use crate::{error::Error, Validate};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Judge {
