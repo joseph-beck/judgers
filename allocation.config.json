@@ -1,0 +1,30 @@
+{
+  "judges": [
+    {
+      "id": "1",
+      "name": "Judge 1"
+    },
+    {
+      "id": "2",
+      "name": "Judge 2"
+    },
+    {
+      "id": "3",
+      "name": "Judge 3"
+    }
+  ],
+  "projects": [
+    {
+      "id": "1",
+      "name": "Project 1"
+    },
+    {
+      "id": "2",
+      "name": "Project 2"
+    },
+    {
+      "id": "3",
+      "name": "Project 3"
+    }
+  ]
+}

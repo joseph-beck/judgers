@@ -1,3 +1,12 @@
+mod cli;
+mod style;
+
 fn main() {
-  println!("Hello, world!");
+  match cli::run() {
+    Ok(_) => {}
+    Err(e) => {
+      eprintln!("Error: {:?}", e);
+      std::process::exit(1);
+    }
+  }
 }
