@@ -1,0 +1,14 @@
+{
+  "judges": [
+    {
+      "id": "1",
+      "name": "Judge 1"
+    }
+  ],
+  "projects": [
+    {
+      "id": "1",
+      "name": "Project 1"
+    }
+  ]
+}
