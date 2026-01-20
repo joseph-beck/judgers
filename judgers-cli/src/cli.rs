@@ -1,62 +1,52 @@
 use clap::{Arg, Command};
-use judgers_core::{
-  allocate::Allocator,
-  config::{Format, Config},
-  error,
-  input::Input,
-};
-use serde_json::from_str;
-use std::fs;
+use judgers_core::error;
 
-use crate::style;
+use crate::{handlers::handle_allocate, style};
+
+pub struct AllocateArgs {
+  pub file: String,
+  pub output: Option<String>,
+  pub format: Option<String>,
+  pub allocator: String,
+  pub judge_count: Option<u32>,
+  pub time_per_judge: Option<u32>,
+}
+
+impl AllocateArgs {
+  fn new(
+    file: String,
+    output: Option<String>,
+    format: Option<String>,
+    allocator: String,
+    judge_count: Option<u32>,
+    time_per_judge: Option<u32>,
+  ) -> Self {
+    AllocateArgs {
+      file,
+      output,
+      format,
+      allocator,
+      judge_count,
+      time_per_judge,
+    }
+  }
+}
 
 pub fn run() -> Result<(), error::Error> {
   let matches = command().get_matches();
 
   match matches.subcommand() {
-    Some(("allocate", sub_matches)) => {
-      let file = sub_matches.get_one::<String>("file").unwrap();
-      let output = sub_matches.get_one::<String>("output");
-      let format = sub_matches.get_one::<String>("format");
-      let allocator = sub_matches.get_one::<String>("allocator");
-      let judge_count = sub_matches.get_one::<String>("judge");
-      let time_per_judge = sub_matches.get_one::<String>("time");
-
-      let contents = fs::read_to_string(file).unwrap();
-      let input = from_str::<Input>(&contents).unwrap();
-
-      let mut config = Config::default();
-
-      if let Some(count) = judge_count {
-        config.judge_amount_min = count.parse::<u32>().unwrap_or(config.judge_amount_min);
-      }
-
-      if let Some(time) = time_per_judge {
-        config.judge_time = time.parse::<u32>().unwrap_or(config.judge_time);
-      }
-
-      if let Some(f) = format {
-        config.format = Format::from_str(Some(f.clone())).unwrap_or(Format::Json);
-      }
-
-      if let Some(out) = output {
-        config.output_path = out.clone();
-      }
-
-      let alloc = <dyn Allocator>::from_str(
-        allocator.map(|s| s.as_str()).unwrap_or("random"),
-        config,
-        input.judges,
-        input.projects,
+    Some(("allocate", a)) => {
+      let args = AllocateArgs::new(
+        a.get_one::<String>("file").unwrap().to_string(),
+        a.get_one::<String>("output").cloned(),
+        a.get_one::<String>("format").cloned(),
+        a.get_one::<String>("allocator").unwrap().to_string(),
+        a.get_one::<String>("judge").map(|s| s.parse::<u32>().unwrap()),
+        a.get_one::<String>("time").map(|s| s.parse::<u32>().unwrap()),
       );
 
-      match alloc.allocate() {
-        Ok(allocations) => {
-          println!("allocations: {:?}", allocations);
-          Ok(())
-        }
-        Err(e) => Err(e),
-      }
+      handle_allocate(args)
     }
     _ => unreachable!(),
   }

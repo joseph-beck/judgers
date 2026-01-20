@@ -10,12 +10,7 @@ pub trait Allocator {
 }
 
 impl dyn Allocator {
-  pub fn from_str(
-    allocator: &str,
-    config: Config,
-    judges: Vec<Judge>,
-    projects: Vec<Project>,
-  ) -> Box<dyn Allocator> {
+  pub fn from_str(allocator: &str, config: Config, judges: Vec<Judge>, projects: Vec<Project>) -> Box<dyn Allocator> {
     match allocator {
       "random" => Box::new(RandomFairAllocator::new(config, judges, projects)),
       "sequence" => Box::new(SequenceFairAllocator::new(config, judges, projects)),
@@ -188,8 +183,7 @@ impl Allocator for SequenceFairAllocator {
     let num_projects = self.projects.len();
 
     let judges_per_project = self.config.judge_amount_min as usize;
-    let projects_per_judge =
-      ((num_projects * judges_per_project) as f64 / num_judges as f64).ceil() as usize;
+    let projects_per_judge = ((num_projects * judges_per_project) as f64 / num_judges as f64).ceil() as usize;
 
     for (i, allocation) in allocations.iter_mut().enumerate() {
       // start offset is required to prevent judges from judging the same project at the same time.
@@ -477,9 +471,7 @@ mod tests {
 
     for project in &projects {
       assert!(
-        project_counts
-          .get(&project.id)
-          .is_some_and(|&count| count >= 2),
+        project_counts.get(&project.id).is_some_and(|&count| count >= 2),
         "Project {} was not allocated exactly twice",
         project.name
       );

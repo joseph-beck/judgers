@@ -1,0 +1,44 @@
+use std::fs;
+
+use judgers_core::{
+  allocate::Allocator,
+  config::{Config, Format},
+  error::Error,
+  input::Input,
+};
+use serde_json::from_str;
+
+use crate::cli::AllocateArgs;
+
+pub fn handle_allocate(args: AllocateArgs) -> Result<(), Error> {
+  let contents = fs::read_to_string(args.file).unwrap();
+  let input = from_str::<Input>(&contents).unwrap();
+
+  let mut config = Config::default();
+
+  if let Some(count) = args.judge_count {
+    config.judge_amount_min = count
+  }
+
+  if let Some(time) = args.time_per_judge {
+    config.judge_time = time;
+  }
+
+  if let Some(f) = args.format {
+    config.format = Format::from_str(Some(f.clone())).unwrap_or(Format::Json);
+  }
+
+  if let Some(output) = args.output {
+    config.output_path = Some(output);
+  }
+
+  let alloc = <dyn Allocator>::from_str(args.allocator.as_str(), config, input.judges, input.projects);
+
+  match alloc.allocate() {
+    Ok(allocations) => {
+      println!("allocations: {:?}", allocations);
+      Ok(())
+    }
+    Err(e) => Err(e),
+  }
+}

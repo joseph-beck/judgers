@@ -59,19 +59,13 @@ mod tests {
   fn test_judge_validation_invalid_id() {
     let judge = Judge::new("".to_string(), "Judge One".to_string());
 
-    assert_eq!(
-      judge.validate(),
-      Err(Error::ErrInvalidJudgeId("".to_string()))
-    );
+    assert_eq!(judge.validate(), Err(Error::ErrInvalidJudgeId("".to_string())));
   }
 
   #[test]
   fn test_judge_validation_invalid_name() {
     let judge = Judge::new("j1".to_string(), "".to_string());
 
-    assert_eq!(
-      judge.validate(),
-      Err(Error::ErrInvalidJudgeName("".to_string()))
-    );
+    assert_eq!(judge.validate(), Err(Error::ErrInvalidJudgeName("".to_string())));
   }
 }

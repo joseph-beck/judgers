@@ -31,7 +31,7 @@ pub struct Config {
   pub format: Format,
   /// Where should the result be output to?
   /// Defaults to current working directory.
-  pub output_path: String,
+  pub output_path: Option<String>,
 }
 
 impl Default for Config {
@@ -40,13 +40,13 @@ impl Default for Config {
       judge_amount_min: 3,
       judge_time: 5,
       format: Format::Json,
-      output_path: ".".to_string(),
+      output_path: None,
     }
   }
 }
 
 impl Config {
-  pub fn new(judge_amount_min: u32, judge_time: u32, mode: Format, output_path: String) -> Self {
+  pub fn new(judge_amount_min: u32, judge_time: u32, mode: Format, output_path: Option<String>) -> Self {
     Config {
       judge_amount_min,
       judge_time,

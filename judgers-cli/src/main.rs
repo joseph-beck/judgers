@@ -1,4 +1,5 @@
 mod cli;
+mod handlers;
 mod style;
 
 fn main() {

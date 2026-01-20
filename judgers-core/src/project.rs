@@ -59,19 +59,13 @@ mod tests {
   fn test_project_validation_invalid_id() {
     let project = Project::new("".to_string(), "Project One".to_string());
 
-    assert_eq!(
-      project.validate(),
-      Err(Error::ErrInvalidProjectId("".to_string()))
-    );
+    assert_eq!(project.validate(), Err(Error::ErrInvalidProjectId("".to_string())));
   }
 
   #[test]
   fn test_project_validation_invalid_name() {
     let project = Project::new("p1".to_string(), "".to_string());
 
-    assert_eq!(
-      project.validate(),
-      Err(Error::ErrInvalidProjectName("".to_string()))
-    );
+    assert_eq!(project.validate(), Err(Error::ErrInvalidProjectName("".to_string())));
   }
 }
