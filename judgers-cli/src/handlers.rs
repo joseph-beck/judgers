@@ -32,11 +32,26 @@ pub fn handle_allocate(args: AllocateArgs) -> Result<(), Error> {
     config.output_path = Some(output);
   }
 
-  let alloc = <dyn Allocator>::from_str(args.allocator.as_str(), config, input.judges, input.projects);
+  let format = config.format.clone();
 
-  match alloc.allocate() {
-    Ok(allocations) => {
-      println!("allocations: {:?}", allocations);
+  let output = config.output_path.clone();
+
+  let allocator = <dyn Allocator>::from_str(args.allocator.as_str(), config, input.judges, input.projects);
+
+  let allocation_result = allocator.allocate();
+
+  match allocation_result {
+    Ok(allocation) => {
+      if format == Format::Json {
+        let json_output = serde_json::to_string_pretty(&allocation);
+
+        if output.is_some() {
+          fs::write(output.unwrap(), json_output.unwrap()).unwrap();
+        } else {
+          println!("{}", json_output.unwrap());
+        }
+      }
+
       Ok(())
     }
     Err(e) => Err(e),

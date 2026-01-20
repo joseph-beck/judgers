@@ -1,5 +1,5 @@
 // Mode for which judging allocations can be generated for.
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub enum Format {
   Json,
   Xlsx,
@@ -18,6 +18,7 @@ impl Format {
 /// Configuration for automatically generating judge allocations for projects with judges.
 /// Requires that for a given mode some options be populated.
 /// For Xlsx mode, spreadsheet_path must be populated.
+#[derive(Clone)]
 pub struct Config {
   /// Minimum amount of times a project needs to be judged.
   /// Defaults to 3.

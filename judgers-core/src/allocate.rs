@@ -1,4 +1,5 @@
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::{config::Config, error, judge::Judge, project::Project};
 
@@ -21,6 +22,7 @@ impl dyn Allocator {
 }
 
 /// Allocation for a single judge and their assigned projects.
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Allocation {
   /// Judge that has projects allocated to it.
   pub judge: Judge,
@@ -35,6 +37,7 @@ impl Allocation {
 }
 
 /// Allocations for all judges and projects.
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Allocations {
   /// Vec of all allocations.
   /// Defaults to empty vec.
