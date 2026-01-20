@@ -1,7 +1,7 @@
 use clap::{Arg, Command};
 use judgers_core::{
   allocate::Allocator,
-  config::{Config, Mode},
+  config::{Format, Config},
   error,
   input::Input,
 };
@@ -17,7 +17,7 @@ pub fn run() -> Result<(), error::Error> {
     Some(("allocate", sub_matches)) => {
       let file = sub_matches.get_one::<String>("file").unwrap();
       let output = sub_matches.get_one::<String>("output");
-      let mode = sub_matches.get_one::<String>("mode");
+      let format = sub_matches.get_one::<String>("format");
       let allocator = sub_matches.get_one::<String>("allocator");
       let judge_count = sub_matches.get_one::<String>("judge");
       let time_per_judge = sub_matches.get_one::<String>("time");
@@ -35,8 +35,8 @@ pub fn run() -> Result<(), error::Error> {
         config.judge_time = time.parse::<u32>().unwrap_or(config.judge_time);
       }
 
-      if let Some(m) = mode {
-        config.mode = Mode::from_str(Some(m.clone())).unwrap_or(Mode::Json);
+      if let Some(f) = format {
+        config.format = Format::from_str(Some(f.clone())).unwrap_or(Format::Json);
       }
 
       if let Some(out) = output {
@@ -73,10 +73,10 @@ fn command() -> Command {
     .long("output")
     .help("output file path to write judging allocations to");
 
-  let mode_arg = Arg::new("mode")
-    .short('m')
-    .long("mode")
-    .help("choose the output mode: json or xlsx");
+  let format_arg = Arg::new("format")
+    .short('f')
+    .long("format")
+    .help("choose the output format: json or xlsx");
 
   let allocator_arg = Arg::new("allocator")
     .short('a')
@@ -105,7 +105,7 @@ fn command() -> Command {
         .arg(file_arg)
         .arg(allocator_arg)
         .arg(output_arg)
-        .arg(mode_arg)
+        .arg(format_arg)
         .arg(judge_arg)
         .arg(time_arg),
     )
