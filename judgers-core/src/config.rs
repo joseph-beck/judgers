@@ -1,16 +1,16 @@
 // Mode for which judging allocations can be generated for.
-#[derive(PartialEq, Eq, Debug)]
-pub enum Mode {
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub enum Format {
   Json,
   Xlsx,
 }
 
-impl Mode {
-  pub fn from_str(mode: Option<String>) -> Option<Mode> {
+impl Format {
+  pub fn from_str(mode: Option<String>) -> Option<Format> {
     match mode.as_deref() {
-      Some("json") => Some(Mode::Json),
-      Some("xlsx") => Some(Mode::Xlsx),
-      _ => Some(Mode::Json),
+      Some("json") => Some(Format::Json),
+      Some("xlsx") => Some(Format::Xlsx),
+      _ => Some(Format::Json),
     }
   }
 }
@@ -18,6 +18,7 @@ impl Mode {
 /// Configuration for automatically generating judge allocations for projects with judges.
 /// Requires that for a given mode some options be populated.
 /// For Xlsx mode, spreadsheet_path must be populated.
+#[derive(Clone)]
 pub struct Config {
   /// Minimum amount of times a project needs to be judged.
   /// Defaults to 3.
@@ -28,10 +29,10 @@ pub struct Config {
   /// What mode are we generating judging results for?
   /// Json or Spreadsheet (Xlsx)
   /// Defaults to using Json.
-  pub mode: Mode,
+  pub format: Format,
   /// Where should the result be output to?
   /// Defaults to current working directory.
-  pub output_path: String,
+  pub output_path: Option<String>,
 }
 
 impl Default for Config {
@@ -39,18 +40,18 @@ impl Default for Config {
     Config {
       judge_amount_min: 3,
       judge_time: 5,
-      mode: Mode::Json,
-      output_path: ".".to_string(),
+      format: Format::Json,
+      output_path: None,
     }
   }
 }
 
 impl Config {
-  pub fn new(judge_amount_min: u32, judge_time: u32, mode: Mode, output_path: String) -> Self {
+  pub fn new(judge_amount_min: u32, judge_time: u32, mode: Format, output_path: Option<String>) -> Self {
     Config {
       judge_amount_min,
       judge_time,
-      mode,
+      format: mode,
       output_path,
     }
   }
@@ -61,7 +62,7 @@ impl std::fmt::Debug for Config {
     f.debug_struct("Config")
       .field("judge_amount_min", &self.judge_amount_min)
       .field("judge_time", &self.judge_time)
-      .field("mode", &self.mode)
+      .field("mode", &self.format)
       .field("output_path", &self.output_path)
       .finish()
   }
