@@ -4,6 +4,7 @@ pub mod error;
 pub mod input;
 pub mod judge;
 pub mod project;
+pub mod scoring;
 pub mod spreadsheet;
 
 pub trait Validate {
