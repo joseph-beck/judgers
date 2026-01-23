@@ -1,8 +1,9 @@
 use std::fs;
 
 use judgers_core::{
-  allocate::{AllocationConfig, Allocator, Format},
+  allocate::{AllocationConfig, Allocator},
   error::Error,
+  format::Format,
   input::Input,
 };
 use serde_json::from_str;

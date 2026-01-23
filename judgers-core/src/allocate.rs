@@ -1,7 +1,7 @@
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{error, judge::Judge, project::Project};
+use crate::{error, format::Format, judge::Judge, project::Project};
 
 /// Allocator trait, must be implemented by all allocators.
 pub trait Allocator {
@@ -28,26 +28,8 @@ impl dyn Allocator {
   }
 }
 
-// Mode for which judging allocations can be generated for.
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub enum Format {
-  Json,
-  Xlsx,
-}
-
-impl Format {
-  pub fn from_str(mode: Option<String>) -> Option<Format> {
-    match mode.as_deref() {
-      Some("json") => Some(Format::Json),
-      Some("xlsx") => Some(Format::Xlsx),
-      _ => Some(Format::Json),
-    }
-  }
-}
-
 /// Configuration for automatically generating judge allocations for projects with judges.
-/// Requires that for a given mode some options be populated.
-/// For Xlsx mode, spreadsheet_path must be populated.
+/// Requires that for a given format some options be populated.
 #[derive(Clone)]
 pub struct AllocationConfig {
   /// Minimum amount of times a project needs to be judged.
@@ -56,7 +38,7 @@ pub struct AllocationConfig {
   /// Amount of time each judge has to judge each project, in minutes.
   /// Defaults to 5.
   pub judge_time: u32,
-  /// What mode are we generating judging results for?
+  /// What format are we generating judging results for?
   /// Json or Spreadsheet (Xlsx)
   /// Defaults to using Json.
   pub format: Format,
