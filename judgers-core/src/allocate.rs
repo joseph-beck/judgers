@@ -11,6 +11,8 @@ pub trait Allocator {
 }
 
 impl dyn Allocator {
+  /// Create a new allocator using a string identifier.
+  /// Defaults to using the RandomFairAllocator.
   pub fn from_str(
     allocator: &str,
     config: AllocationConfig,
@@ -169,6 +171,9 @@ impl RandomFairAllocator {
 }
 
 impl Allocator for RandomFairAllocator {
+  /// Allocate projects to judges randomly.
+  /// Each project will be assigned to at least the min judge count.
+  /// May return an error if allocation is not possible.
   fn allocate(&self) -> Result<Allocations, error::Error> {
     if self.judges.is_empty() {
       return Err(error::Error::ErrNoJudges);
@@ -234,6 +239,9 @@ impl SequenceFairAllocator {
 }
 
 impl Allocator for SequenceFairAllocator {
+  /// Allocate projects to judges in sequence.
+  /// Each project will be assigned to at least the min judge count.
+  /// May return an error if allocation is not possible.
   fn allocate(&self) -> Result<Allocations, error::Error> {
     if self.judges.is_empty() {
       return Err(error::Error::ErrNoJudges);
@@ -304,6 +312,8 @@ impl PresentationAllocator {
 }
 
 impl Allocator for PresentationAllocator {
+  /// Allocate all projects to all judges.
+  /// May return an error if allocation is not possible.
   fn allocate(&self) -> Result<Allocations, error::Error> {
     let mut allocations: Vec<Allocation> = Vec::new();
 
