@@ -1,7 +1,10 @@
 use clap::{Arg, Command};
 use judgers_core::error;
 
-use crate::{handlers::handle_allocate, style};
+use crate::{
+  handlers::{handle_allocate, handle_score},
+  style,
+};
 
 pub struct AllocateArgs {
   pub file: String,
@@ -48,6 +51,7 @@ pub fn run() -> Result<(), error::Error> {
 
       handle_allocate(args)
     }
+    Some(("score", _)) => handle_score(),
     _ => unreachable!(),
   }
 }
@@ -99,4 +103,5 @@ fn command() -> Command {
         .arg(judge_arg)
         .arg(time_arg),
     )
+    .subcommand(Command::new("score").about("score projects based on judge results"))
 }

@@ -1,8 +1,7 @@
 use std::fs;
 
 use judgers_core::{
-  allocate::Allocator,
-  config::{Config, Format},
+  allocate::{AllocationConfig, Allocator, Format},
   error::Error,
   input::Input,
 };
@@ -14,7 +13,7 @@ pub fn handle_allocate(args: AllocateArgs) -> Result<(), Error> {
   let contents = fs::read_to_string(args.file).unwrap();
   let input = from_str::<Input>(&contents).unwrap();
 
-  let mut config = Config::default();
+  let mut config = AllocationConfig::default();
 
   if let Some(count) = args.judge_count {
     config.judge_amount_min = count
@@ -56,4 +55,8 @@ pub fn handle_allocate(args: AllocateArgs) -> Result<(), Error> {
     }
     Err(e) => Err(e),
   }
+}
+
+pub fn handle_score() -> Result<(), Error> {
+  Ok(())
 }
