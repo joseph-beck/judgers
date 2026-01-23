@@ -1,7 +1,7 @@
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{config::Config, error, judge::Judge, project::Project};
+use crate::{error, judge::Judge, project::Project};
 
 /// Allocator trait, must be implemented by all allocators.
 pub trait Allocator {
@@ -11,13 +11,88 @@ pub trait Allocator {
 }
 
 impl dyn Allocator {
-  pub fn from_str(allocator: &str, config: Config, judges: Vec<Judge>, projects: Vec<Project>) -> Box<dyn Allocator> {
+  pub fn from_str(
+    allocator: &str,
+    config: AllocationConfig,
+    judges: Vec<Judge>,
+    projects: Vec<Project>,
+  ) -> Box<dyn Allocator> {
     match allocator {
       "random" => Box::new(RandomFairAllocator::new(config, judges, projects)),
       "sequence" => Box::new(SequenceFairAllocator::new(config, judges, projects)),
       "presentation" => Box::new(PresentationAllocator::new(config, judges, projects)),
       _ => Box::new(RandomFairAllocator::new(config, judges, projects)),
     }
+  }
+}
+
+// Mode for which judging allocations can be generated for.
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub enum Format {
+  Json,
+  Xlsx,
+}
+
+impl Format {
+  pub fn from_str(mode: Option<String>) -> Option<Format> {
+    match mode.as_deref() {
+      Some("json") => Some(Format::Json),
+      Some("xlsx") => Some(Format::Xlsx),
+      _ => Some(Format::Json),
+    }
+  }
+}
+
+/// Configuration for automatically generating judge allocations for projects with judges.
+/// Requires that for a given mode some options be populated.
+/// For Xlsx mode, spreadsheet_path must be populated.
+#[derive(Clone)]
+pub struct AllocationConfig {
+  /// Minimum amount of times a project needs to be judged.
+  /// Defaults to 3.
+  pub judge_amount_min: u32,
+  /// Amount of time each judge has to judge each project, in minutes.
+  /// Defaults to 5.
+  pub judge_time: u32,
+  /// What mode are we generating judging results for?
+  /// Json or Spreadsheet (Xlsx)
+  /// Defaults to using Json.
+  pub format: Format,
+  /// Where should the result be output to?
+  /// Defaults to current working directory.
+  pub output_path: Option<String>,
+}
+
+impl Default for AllocationConfig {
+  fn default() -> Self {
+    AllocationConfig {
+      judge_amount_min: 3,
+      judge_time: 5,
+      format: Format::Json,
+      output_path: None,
+    }
+  }
+}
+
+impl AllocationConfig {
+  pub fn new(judge_amount_min: u32, judge_time: u32, mode: Format, output_path: Option<String>) -> Self {
+    AllocationConfig {
+      judge_amount_min,
+      judge_time,
+      format: mode,
+      output_path,
+    }
+  }
+}
+
+impl std::fmt::Debug for AllocationConfig {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.debug_struct("Config")
+      .field("judge_amount_min", &self.judge_amount_min)
+      .field("judge_time", &self.judge_time)
+      .field("format", &self.format)
+      .field("output_path", &self.output_path)
+      .finish()
   }
 }
 
@@ -76,7 +151,7 @@ impl Allocations {
 /// Each project will be judged by a unique judge.
 pub struct RandomFairAllocator {
   /// General configuration for allocators.
-  config: Config,
+  config: AllocationConfig,
   /// All judges that are used for allocations.
   judges: Vec<Judge>,
   /// All projects that will be assigned to judges.
@@ -84,7 +159,7 @@ pub struct RandomFairAllocator {
 }
 
 impl RandomFairAllocator {
-  pub fn new(config: Config, judges: Vec<Judge>, projects: Vec<Project>) -> Self {
+  pub fn new(config: AllocationConfig, judges: Vec<Judge>, projects: Vec<Project>) -> Self {
     RandomFairAllocator {
       config,
       judges,
@@ -141,7 +216,7 @@ impl Allocator for RandomFairAllocator {
 /// This means judges will judge in the order, x then y then z.
 pub struct SequenceFairAllocator {
   /// General configuration for allocators.
-  config: Config,
+  config: AllocationConfig,
   /// All judges that are used for allocations.
   judges: Vec<Judge>,
   /// All projects that will be assigned to judges.
@@ -149,7 +224,7 @@ pub struct SequenceFairAllocator {
 }
 
 impl SequenceFairAllocator {
-  pub fn new(config: Config, judges: Vec<Judge>, projects: Vec<Project>) -> Self {
+  pub fn new(config: AllocationConfig, judges: Vec<Judge>, projects: Vec<Project>) -> Self {
     SequenceFairAllocator {
       config,
       judges,
@@ -211,7 +286,7 @@ impl Allocator for SequenceFairAllocator {
 pub struct PresentationAllocator {
   /// Config for the allocator.
   /// Judge amount will be ignored for this allocator.
-  _config: Config,
+  _config: AllocationConfig,
   /// All judges that are used for allocations.
   judges: Vec<Judge>,
   /// All projects that will be assigned to judges.
@@ -219,7 +294,7 @@ pub struct PresentationAllocator {
 }
 
 impl PresentationAllocator {
-  pub fn new(_config: Config, judges: Vec<Judge>, projects: Vec<Project>) -> Self {
+  pub fn new(_config: AllocationConfig, judges: Vec<Judge>, projects: Vec<Project>) -> Self {
     PresentationAllocator {
       _config,
       judges,
@@ -247,12 +322,12 @@ impl Allocator for PresentationAllocator {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::config::Config;
+
   use std::collections::HashMap;
 
   #[test]
   fn test_random_allocator_with_two() {
-    let config = Config {
+    let config = AllocationConfig {
       judge_amount_min: 2,
       ..Default::default()
     };
@@ -292,7 +367,7 @@ mod tests {
 
   #[test]
   fn test_random_allocator_with_three() {
-    let config = Config {
+    let config = AllocationConfig {
       judge_amount_min: 3,
       ..Default::default()
     };
@@ -335,7 +410,7 @@ mod tests {
 
   #[test]
   fn test_random_allocator_error_not_enough_judges() {
-    let config = Config {
+    let config = AllocationConfig {
       judge_amount_min: 3,
       ..Default::default()
     };
@@ -359,7 +434,7 @@ mod tests {
 
   #[test]
   fn test_random_allocator_no_projects() {
-    let config = Config {
+    let config = AllocationConfig {
       judge_amount_min: 3,
       ..Default::default()
     };
@@ -381,7 +456,7 @@ mod tests {
 
   #[test]
   fn test_random_allocator_no_judges() {
-    let config = Config {
+    let config = AllocationConfig {
       judge_amount_min: 3,
       ..Default::default()
     };
@@ -403,7 +478,7 @@ mod tests {
 
   #[test]
   fn test_sequence_allocator_with_two() {
-    let config = Config {
+    let config = AllocationConfig {
       judge_amount_min: 2,
       ..Default::default()
     };
@@ -443,7 +518,7 @@ mod tests {
 
   #[test]
   fn test_sequence_allocator_three() {
-    let config = Config {
+    let config = AllocationConfig {
       judge_amount_min: 3,
       ..Default::default()
     };
@@ -483,7 +558,7 @@ mod tests {
 
   #[test]
   fn test_sequence_allocator_error_not_enough_judges() {
-    let config = Config {
+    let config = AllocationConfig {
       judge_amount_min: 3,
       ..Default::default()
     };
@@ -507,7 +582,7 @@ mod tests {
 
   #[test]
   fn test_sequence_allocator_no_projects() {
-    let config = Config {
+    let config = AllocationConfig {
       judge_amount_min: 3,
       ..Default::default()
     };
@@ -529,7 +604,7 @@ mod tests {
 
   #[test]
   fn test_sequence_allocator_no_judges() {
-    let config = Config {
+    let config = AllocationConfig {
       judge_amount_min: 3,
       ..Default::default()
     };
@@ -551,7 +626,7 @@ mod tests {
 
   #[test]
   fn test_presentation_allocator_no_projects() {
-    let config = Config::default();
+    let config = AllocationConfig::default();
 
     let judges = vec![
       Judge::new("1".to_string(), "Judge 1".to_string()),
@@ -571,7 +646,7 @@ mod tests {
 
   #[test]
   fn test_presentation_allocator() {
-    let config = Config::default();
+    let config = AllocationConfig::default();
 
     let judges = vec![
       Judge::new("1".to_string(), "Judge 1".to_string()),
