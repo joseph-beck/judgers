@@ -23,4 +23,6 @@ pub enum Error {
   ErrDuplicateProjectIds,
   /// When the project name is invalid.
   ErrInvalidProjectName(String),
+  /// When no rank weights are provided for stack ranking.
+  ErrNoRankWeights,
 }
