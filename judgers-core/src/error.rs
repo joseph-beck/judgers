@@ -27,5 +27,5 @@ pub enum Error {
   ErrNoRankWeights,
   /// When the time provided is invalid.
   /// Hour must be less than 24 and minute must be less than 60.
-  InvalidTime,
+  ErrInvalidTime,
 }

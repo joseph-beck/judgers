@@ -16,7 +16,7 @@ impl Time {
     if hour < 24 && minute < 60 {
       Ok(Time { hour, minute })
     } else {
-      Err(Error::InvalidTime)
+      Err(Error::ErrInvalidTime)
     }
   }
 
@@ -37,11 +37,11 @@ impl Time {
   pub fn parse(s: &str) -> Result<Self, Error> {
     let parts: Vec<&str> = s.split(':').collect();
     if parts.len() != 2 {
-      return Err(Error::InvalidTime);
+      return Err(Error::ErrInvalidTime);
     }
 
-    let hour: u8 = parts[0].parse().map_err(|_| Error::InvalidTime)?;
-    let minute: u8 = parts[1].parse().map_err(|_| Error::InvalidTime)?;
+    let hour: u8 = parts[0].parse().map_err(|_| Error::ErrInvalidTime)?;
+    let minute: u8 = parts[1].parse().map_err(|_| Error::ErrInvalidTime)?;
 
     Time::new(hour, minute)
   }
