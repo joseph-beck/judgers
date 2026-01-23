@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 rand = "0.9.2"
+rust_xlsxwriter = "0.92"
 serde = { version = "1.0", features = ["derive"] }

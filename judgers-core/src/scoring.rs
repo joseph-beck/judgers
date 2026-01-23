@@ -270,14 +270,17 @@ mod tests {
       Project {
         id: "a".to_string(),
         name: "project a".to_string(),
+        table_number: None,
       },
       Project {
         id: "b".to_string(),
         name: "project b".to_string(),
+        table_number: None,
       },
       Project {
         id: "c".to_string(),
         name: "project c".to_string(),
+        table_number: None,
       },
     ];
 
@@ -343,14 +346,17 @@ mod tests {
       Project {
         id: "a".to_string(),
         name: "project a".to_string(),
+        table_number: None,
       },
       Project {
         id: "b".to_string(),
         name: "project b".to_string(),
+        table_number: None,
       },
       Project {
         id: "c".to_string(),
         name: "project c".to_string(),
+        table_number: None,
       },
     ];
 
@@ -406,22 +412,27 @@ mod tests {
       Project {
         id: "a".to_string(),
         name: "project a".to_string(),
+        table_number: None,
       },
       Project {
         id: "b".to_string(),
         name: "project b".to_string(),
+        table_number: None,
       },
       Project {
         id: "c".to_string(),
         name: "project c".to_string(),
+        table_number: None,
       },
       Project {
         id: "d".to_string(),
         name: "project d".to_string(),
+        table_number: None,
       },
       Project {
         id: "e".to_string(),
         name: "project e".to_string(),
+        table_number: None,
       },
     ];
 

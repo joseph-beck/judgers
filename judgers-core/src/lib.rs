@@ -8,6 +8,7 @@ pub mod order;
 pub mod project;
 pub mod scoring;
 pub mod spreadsheet;
+pub mod time;
 
 pub trait Validate {
   fn validate(&self) -> Result<(), error::Error>;

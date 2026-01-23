@@ -25,4 +25,7 @@ pub enum Error {
   ErrInvalidProjectName(String),
   /// When no rank weights are provided for stack ranking.
   ErrNoRankWeights,
+  /// When the time provided is invalid.
+  /// Hour must be less than 24 and minute must be less than 60.
+  InvalidTime,
 }
