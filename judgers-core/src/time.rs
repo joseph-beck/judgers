@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
+
 use crate::error::Error;
 
 /// Represents a time of day (hours and minutes).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Time {
   /// Hour (0-23)
   pub hour: u8,

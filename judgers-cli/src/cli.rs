@@ -2,13 +2,13 @@ use clap::{Arg, Command};
 use judgers_core::error;
 
 use crate::{
-  handlers::{handle_allocate, handle_score},
+  handlers::{handle_allocate, handle_score, handle_spreadsheet},
   style,
 };
 
 pub struct AllocateArgs {
-  pub file: String,
-  pub output: Option<String>,
+  pub file_path: String,
+  pub output_path: Option<String>,
   pub format: Option<String>,
   pub allocator: String,
   pub judge_count: Option<u32>,
@@ -17,21 +17,32 @@ pub struct AllocateArgs {
 
 impl AllocateArgs {
   fn new(
-    file: String,
-    output: Option<String>,
+    file_path: String,
+    output_path: Option<String>,
     format: Option<String>,
     allocator: String,
     judge_count: Option<u32>,
     time_per_judge: Option<u32>,
   ) -> Self {
     AllocateArgs {
-      file,
-      output,
+      file_path,
+      output_path,
       format,
       allocator,
       judge_count,
       time_per_judge,
     }
+  }
+}
+
+pub struct SpreadsheetArgs {
+  pub file_path: String,
+  pub config_path: Option<String>,
+}
+
+impl SpreadsheetArgs {
+  fn new(file_path: String, config_path: Option<String>) -> Self {
+    SpreadsheetArgs { file_path, config_path }
   }
 }
 
@@ -52,6 +63,14 @@ pub fn run() -> Result<(), error::Error> {
       handle_allocate(args)
     }
     Some(("score", _)) => handle_score(),
+    Some(("spreadsheet", s)) => {
+      let args = SpreadsheetArgs::new(
+        s.get_one::<String>("file").unwrap().to_string(),
+        s.get_one::<String>("config").cloned(),
+      );
+
+      handle_spreadsheet(args)
+    }
     _ => unreachable!(),
   }
 }
@@ -61,6 +80,11 @@ fn command() -> Command {
     .help("input file path containing judges and projects")
     .required(true)
     .index(1);
+
+  let config_arg = Arg::new("config")
+    .short('c')
+    .long("config")
+    .help("configuration file path");
 
   let output_arg = Arg::new("output")
     .short('o')
@@ -96,12 +120,19 @@ fn command() -> Command {
     .subcommand(
       Command::new("allocate")
         .about("allocate judges to projects")
-        .arg(file_arg)
-        .arg(allocator_arg)
-        .arg(output_arg)
-        .arg(format_arg)
-        .arg(judge_arg)
-        .arg(time_arg),
+        .arg(file_arg.clone())
+        .arg(allocator_arg.clone())
+        .arg(output_arg.clone())
+        .arg(format_arg.clone())
+        .arg(judge_arg.clone())
+        .arg(time_arg.clone()),
     )
     .subcommand(Command::new("score").about("score projects based on judge results"))
+    .subcommand(
+      Command::new("spreadsheet")
+        .about("generate a judging spreadsheet")
+        .arg(file_arg.clone())
+        .arg(config_arg.clone())
+        .arg(output_arg.clone()),
+    )
 }
