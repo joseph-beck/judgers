@@ -28,4 +28,7 @@ pub enum Error {
   /// When the time provided is invalid.
   /// Hour must be less than 24 and minute must be less than 60.
   ErrInvalidTime,
+  /// When failed to create the spreadsheet.
+  /// Includes the underlying error message.
+  ErrFailedToCreateSpreadsheet(String),
 }

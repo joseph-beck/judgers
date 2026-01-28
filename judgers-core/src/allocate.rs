@@ -59,11 +59,11 @@ impl Default for AllocationConfig {
 }
 
 impl AllocationConfig {
-  pub fn new(judge_amount_min: u32, judge_time: u32, mode: Format, output_path: Option<String>) -> Self {
+  pub fn new(judge_amount_min: u32, judge_time: u32, format: Format, output_path: Option<String>) -> Self {
     AllocationConfig {
       judge_amount_min,
       judge_time,
-      format: mode,
+      format,
       output_path,
     }
   }

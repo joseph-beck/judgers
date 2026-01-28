@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use rust_xlsxwriter::{Format, Workbook, Worksheet, XlsxError};
+use serde::{Deserialize, Serialize};
 
 use crate::{
   allocate::{Allocation, Allocations},
@@ -39,6 +40,7 @@ const RESULTS_JUDGE_RANK_COL_HEADER: &str = " Rank";
 const RESULTS_JUDGE_POINTS_COL_HEADER: &str = " Points";
 
 /// Configuration for spreadsheet generation.
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SpreadsheetConfig {
   /// Path to save the spreadsheet.
   pub output_path: String,
@@ -73,9 +75,13 @@ impl SpreadsheetConfig {
   }
 }
 
+impl Default for SpreadsheetConfig {
+  fn default() -> Self {
+    Self::with_default_weights("judging-schedule.xlsx".to_string(), 10, Time::new(9, 0).unwrap())
+  }
+}
+
 pub struct Spreadsheet {
-  /// Path to the spreadsheet.
-  pub path: String,
   /// Config for the spreadsheet.
   pub config: SpreadsheetConfig,
 }
@@ -83,14 +89,15 @@ pub struct Spreadsheet {
 impl Spreadsheet {
   /// Create a new Spreadsheet instance.
   /// `path` is the file path where the spreadsheet will be saved.
-  pub fn new(path: String, config: SpreadsheetConfig) -> Self {
-    Spreadsheet { path, config }
+  pub fn new(config: SpreadsheetConfig) -> Self {
+    Spreadsheet { config }
   }
 
   /// Create a spreadsheet from allocations where each judge gets their own sheet.
   /// Each sheet contains columns: Project, Time, Table, Notes, Rank
   /// Also creates a Score Configuration sheet and a Results sheet.
-  pub fn from_allocations(allocations: &Allocations, config: &SpreadsheetConfig) -> Result<(), XlsxError> {
+  pub fn from_allocations(&self, allocations: &Allocations) -> Result<(), XlsxError> {
+    let config = &self.config;
     let mut workbook = Workbook::new();
 
     let header_format = Format::new().set_bold();
@@ -342,7 +349,8 @@ mod tests {
 
     let config = SpreadsheetConfig::with_default_weights("test.xlsx".to_string(), 10, Time::new(9, 0).unwrap());
 
-    let result = Spreadsheet::from_allocations(&allocations, &config);
+    let spreadsheet = Spreadsheet::new(config);
+    let result = spreadsheet.from_allocations(&allocations);
     assert!(result.is_ok());
 
     let _ = std::fs::remove_file("test.xlsx");
