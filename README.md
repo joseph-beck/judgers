@@ -24,6 +24,16 @@ mv target/release/judgers-cli judgers
 ./judgers
 ```
 
+alternatively install with cargo
+
+```sh
+# 1. install with cargo
+cargo install --path judgers-cli
+
+# 2. use judgers
+judgers-cli
+```
+
 ## examples
 
 check out [example](/examples) configs here.
