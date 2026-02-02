@@ -176,9 +176,14 @@ impl Spreadsheet {
 
       let time = Time::from_minutes(current_minutes);
 
+      let mut table_number = "".to_string();
+      if let Some(tn) = project.table {
+        table_number = tn.to_string();
+      }
+
       worksheet.write_string(row, PROJECT_COL, &project.name)?; // Project
       worksheet.write_string(row, TIME_COL, &time.format())?; // Time
-      worksheet.write_string(row, TABLE_COL, &project.id)?; // Table
+      worksheet.write_string(row, TABLE_COL, &table_number)?; // Table
       worksheet.write_string(row, NOTES_COL, "")?; // Notes
       worksheet.write_string(row, RANK_COL, "")?; // Rank
 

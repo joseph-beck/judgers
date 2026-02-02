@@ -37,12 +37,17 @@ impl AllocateArgs {
 
 pub struct SpreadsheetArgs {
   pub file_path: String,
+  pub judge_count: Option<u32>,
   pub config_path: Option<String>,
 }
 
 impl SpreadsheetArgs {
-  fn new(file_path: String, config_path: Option<String>) -> Self {
-    SpreadsheetArgs { file_path, config_path }
+  fn new(file_path: String, judge_count: Option<u32>, config_path: Option<String>) -> Self {
+    SpreadsheetArgs {
+      file_path,
+      judge_count,
+      config_path,
+    }
   }
 }
 
@@ -66,6 +71,7 @@ pub fn run() -> Result<(), error::Error> {
     Some(("spreadsheet", s)) => {
       let args = SpreadsheetArgs::new(
         s.get_one::<String>("file").unwrap().to_string(),
+        s.get_one::<String>("judge").map(|s| s.parse::<u32>().unwrap()),
         s.get_one::<String>("config").cloned(),
       );
 
@@ -132,6 +138,7 @@ fn command() -> Command {
       Command::new("spreadsheet")
         .about("generate a judging spreadsheet")
         .arg(file_arg.clone())
+        .arg(judge_arg.clone())
         .arg(config_arg.clone())
         .arg(output_arg.clone()),
     )

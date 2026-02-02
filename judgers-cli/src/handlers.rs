@@ -79,7 +79,7 @@ pub fn handle_spreadsheet(args: SpreadsheetArgs) -> Result<(), Error> {
 
   let allocator = <dyn Allocator>::from_str(
     "sequence",
-    AllocationConfig::new(3, config.judge_time, Format::Json, None),
+    AllocationConfig::new(args.judge_count.unwrap_or(3), config.judge_time, Format::Json, None),
     input.judges,
     input.projects,
   );

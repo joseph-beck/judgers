@@ -9,20 +9,16 @@ pub struct Project {
   /// Name of the project.
   pub name: String,
   /// Table number assigned to the project (optional).
-  pub table_number: Option<u32>,
+  pub table: Option<u32>,
 }
 
 impl Project {
   pub fn new(id: String, name: String) -> Self {
-    Project {
-      id,
-      name,
-      table_number: None,
-    }
+    Project { id, name, table: None }
   }
 
   pub fn with_table_number(mut self, table_number: u32) -> Self {
-    self.table_number = Some(table_number);
+    self.table = Some(table_number);
 
     self
   }
@@ -65,7 +61,7 @@ mod tests {
     let project = Project::new("p1".to_string(), "Project One".to_string()).with_table_number(5);
 
     assert!(project.validate().is_ok());
-    assert_eq!(project.table_number, Some(5));
+    assert_eq!(project.table, Some(5));
   }
 
   #[test]

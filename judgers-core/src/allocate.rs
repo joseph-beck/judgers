@@ -247,8 +247,11 @@ impl Allocator for SequenceFairAllocator {
       });
     }
 
+    let mut projects = self.projects.clone();
+    projects.sort_by_key(|p| p.table.unwrap_or(u32::MAX));
+
     let num_judges = self.judges.len();
-    let num_projects = self.projects.len();
+    let num_projects = projects.len();
 
     let judges_per_project = self.config.judge_amount_min as usize;
     let projects_per_judge = ((num_projects * judges_per_project) as f64 / num_judges as f64).ceil() as usize;
@@ -262,7 +265,7 @@ impl Allocator for SequenceFairAllocator {
         let project_idx = (start_offset + j) % num_projects;
 
         if j < num_projects {
-          allocation.projects.push(self.projects[project_idx].clone());
+          allocation.projects.push(projects[project_idx].clone());
         }
       }
     }
